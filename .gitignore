@@ -1,0 +1,24 @@
+# Environnement
+.venv/
+drive/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.git-cs294-backup/
+
+# Données (CIFAR10, SVHN, Pascal VOC) : plusieurs Go
+cs294-158-ssl/data/
+*.zip
+
+# Checkpoints pré-entraînés fournis par le prof (results.zip, ~2.5 Go)
+cs294-158-ssl/results/cifar10_context_encoder/
+cs294-158-ssl/results/cifar10_rotation/
+cs294-158-ssl/results/cifar10_simclr/
+cs294-158-ssl/results/imagenet100_simclr/
+
+# Fichiers générés par pip install
+cs294-158-ssl/build/
+cs294-158-ssl/*.egg-info/
+
+# Sujet du TP
+M2 VMI - Image - TP Self supervised-2.pdf
