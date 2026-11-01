@@ -19,7 +19,7 @@ def remove_module_state_dict(state_dict):
        and loaded without"""
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        name = k[7:]
+        name = k[7:] if k.startswith("module.") else k
         new_state_dict[name] = v
     return new_state_dict
 

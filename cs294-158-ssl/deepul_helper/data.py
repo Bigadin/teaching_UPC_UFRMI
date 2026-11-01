@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 import cv2
+from PIL import Image
 
 import torchvision.transforms.functional as F
 from torchvision import datasets
@@ -25,6 +26,11 @@ def get_transform(dataset, task, train=True):
                 transforms.ToTensor(),
                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
             ])
+        elif dataset == 'svhn':
+            transform = transforms.Compose([
+                transforms.Resize(128),
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))            ])
     elif task == 'rotation':
         if dataset == 'cifar10':
             if train:
@@ -54,6 +60,22 @@ def get_transform(dataset, task, train=True):
                     transforms.ToTensor(),
                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
                 ])
+        elif dataset == 'svhn':
+            if train:
+                transform = transforms.Compose([
+                    transforms.RandomCrop(32, padding=4),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))                ])
+            else:
+                transform = transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))                ])
+    elif task == 'relative_position':
+        # cifar10 et svhn : pas d'augmentation, les patchs sont tirés au hasard dans le modèle
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))
+        ])
     elif task == 'cpc':
         if train:
             transform = transforms.Compose([
@@ -104,6 +126,18 @@ def get_transform(dataset, task, train=True):
                     transforms.CenterCrop(128),
                     transforms.ToTensor(),
                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+                ])
+        elif dataset == 'svhn':
+            if train:
+                transform = transforms.Compose([
+                    transforms.RandomResizedCrop(32),
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])
+                ])
+            else:
+                transform = transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])
                 ])
         transform = SimCLRDataTransform(transform)
     elif task == 'segmentation':
@@ -162,6 +196,12 @@ def get_datasets(dataset, task):
                                              transforms=get_transform(dataset, task, train=False),
                                              download=True)
         return train_dset, test_dset, 21
+    elif dataset == 'svhn':
+        train_dset = SVHNNpz(osp.join('data', dataset), split='train',
+                             transform=get_transform(dataset, task, train=True))
+        test_dset = SVHNNpz(osp.join('data', dataset), split='test',
+                            transform=get_transform(dataset, task, train=False))
+        return train_dset, test_dset, len(train_dset.classes)
     else:
         raise Exception('Invalid dataset:', dataset)
 
@@ -252,3 +292,22 @@ class SegTargetTransform(object):
         target *= 255.
         target[target > 20] = 0
         return target.long()
+
+# SVHN loaded from local .npz files (data/svhn/{train,test}.npz), since the
+# official server used by datasets.SVHN is unreachable. Mirrors its interface.
+#claude code par ce que le serveur officiel utilisé par datasets.SVHN est inaccessible. 
+class SVHNNpz(object):
+    def __init__(self, root, split='train', transform=None):
+        arrs = np.load(osp.join(root, f'{split}.npz'))
+        self.images, self.labels = arrs['images'], arrs['labels']
+        self.classes = [str(i) for i in range(10)]
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        img = Image.fromarray(self.images[index])
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, int(self.labels[index])

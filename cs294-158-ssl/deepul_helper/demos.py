@@ -13,26 +13,29 @@ from deepul_helper.data import get_datasets
 from deepul_helper.tasks import *
 from deepul_helper.utils import accuracy, unnormalize, remove_module_state_dict, seg_idxs_to_color
 from deepul_helper.seg_model import SegmentationModel
+import torch.nn.functional as F
 
 
-def load_model_and_data(task, dataset='cifar10'):
+def load_model_and_data(task, dataset='cifar10',pretrained_weights="cifar10"):
     train_dset, test_dset, n_classes = get_datasets(dataset, task)
     train_loader = data.DataLoader(train_dset, batch_size=128, num_workers=4,
                                    pin_memory=True, shuffle=True)
     test_loader = data.DataLoader(test_dset, batch_size=128, num_workers=4,
                                   pin_memory=True, shuffle=True)
 
-    ckpt_pth = osp.join('results', f'{dataset}_{task}', 'model_best.pth.tar')
+    ckpt_pth = osp.join('results', f'{pretrained_weights}_{task}', 'model_best.pth.tar')
     #ckpt = torch.load(ckpt_pth, map_location='cpu')
     ckpt = torch.load(ckpt_pth, map_location='cpu',weights_only=False)
     
     
     if task == 'context_encoder':
-        model = ContextEncoder(dataset, n_classes)
+        model = ContextEncoder(pretrained_weights, n_classes)
     elif task == 'rotation':
-        model = RotationPrediction(dataset, n_classes)
+        model = RotationPrediction(pretrained_weights, n_classes)
     elif task == 'simclr':
-        model = SimCLR(dataset, n_classes, None)
+        model = SimCLR(pretrained_weights, n_classes, None)
+    elif task == 'relative_position':
+        model = RelativePosition(pretrained_weights, n_classes)
     model.load_state_dict(remove_module_state_dict(ckpt['state_dict']))
 
     model.cuda()
@@ -73,6 +76,32 @@ def evaluate_classifier(model, linear_classifier, loader):
     total = len(loader.dataset)
 
     return correct1 / total, correct5 / total
+
+#retrain le classifieur linéaire sur le jeu d'entraînement avec l'encodeur sur cifar10
+def train_linear_classifier(model, train_loader, epochs=10, lr=1e-3):
+    model.eval()                                   # encodeur gelé
+    classifier = model.construct_classifier().cuda()   # nouveau classifieur, poids aléatoires
+    classifier.train()
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+        for images, target in train_loader:
+            images = images_to_cuda(images)
+            target = target.cuda(non_blocking=True)
+
+            with torch.no_grad():
+                _, zs = model(images)
+
+            logits = classifier(zs)
+            loss = F.cross_entropy(logits, target)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        print(f'Epoch {epoch+1}/{epochs} - loss {loss.item():.4f}')
+
+    classifier.eval()
+    return classifier
 
 
 def display_nearest_neighbors(task, model, loader, n_examples=4, k=16):

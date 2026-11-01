@@ -1,0 +1,9 @@
+Task,Dataset,Top-1,Top-5
+context_encoder,cifar10,45.79,90.29
+context_encoder,svhn,62.53457282874653,92.77811923786109
+rotation,cifar10,79.92,99.12
+rotation,svhn,79.69806391663836,97.86416717416755
+simclr,cifar10,92.84,99.86
+simclr,svhn,56.61109403810695,91.58727718791715
+relative_position,cifar10,66.65,95.98
+relative_position,svhn,78.27289489389712,97.30716041794714

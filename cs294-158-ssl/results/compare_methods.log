@@ -1,0 +1,24 @@
+{'Task': 'context_encoder', 'Dataset': 'cifar10', 'Top-1': 45.79, 'Top-5': 90.29}
+{'Task': 'context_encoder', 'Dataset': 'svhn', 'Top-1': 62.53457282874653, 'Top-5': 92.77811923786109}
+{'Task': 'rotation', 'Dataset': 'cifar10', 'Top-1': 79.92, 'Top-5': 99.12}
+{'Task': 'rotation', 'Dataset': 'svhn', 'Top-1': 79.6980639213276, 'Top-5': 97.86416717885679}
+{'Task': 'simclr', 'Dataset': 'cifar10', 'Top-1': 92.84, 'Top-5': 99.86}
+{'Task': 'simclr', 'Dataset': 'svhn', 'Top-1': 56.61109403341771, 'Top-5': 91.58727718791715}
+{'Task': 'relative_position', 'Dataset': 'cifar10', 'Top-1': 66.65, 'Top-5': 95.98}
+Epoch 1/10 - loss 0.9794
+Epoch 2/10 - loss 0.6103
+Epoch 3/10 - loss 0.2916
+Epoch 4/10 - loss 0.7142
+Epoch 5/10 - loss 0.6238
+Epoch 6/10 - loss 0.7872
+Epoch 7/10 - loss 0.7125
+Epoch 8/10 - loss 0.3207
+Epoch 9/10 - loss 0.5996
+Epoch 10/10 - loss 0.6717
+{'Task': 'relative_position', 'Dataset': 'svhn', 'Top-1': 78.27289489389712, 'Top-5': 97.3071604132579}
+Dataset            cifar10   svhn
+Task                             
+context_encoder      45.79  62.53
+relative_position    66.65  78.27
+rotation             79.92  79.70
+simclr               92.84  56.61

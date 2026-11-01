@@ -19,6 +19,10 @@ class RotationPrediction(nn.Module):
             self.model = AlexNet()
             self.latent_dim = 256 * 13 * 13
             self.feat_layer = 'conv5'
+        elif dataset == 'svhn':
+            self.model = NetworkInNetwork()
+            self.latent_dim = 192 * 8 * 8
+            self.feat_layer = 'conv2'
         else:
             raise Exception('Unsupported dataset:', dataset)
         self.dataset = dataset
